@@ -1,26 +1,24 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
+from core.config import settings
+
+from api import router as api_router
+from core.models import db_helper
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # start up
+    yield
+    # shutdown
+    print("dispose engine")
+    await db_helper.dispose()
 
 
 
-app = FastAPI()
+main_app = FastAPI(
+    lifespan=lifespan,
+)
+main_app.include_router(api_router, prefix=settings.api.prefix)
 
-@app.get("/")
-def hello_index():
-    return {
-        "message": "Hello index!"
-    }
-
-@app.get("/items")
-def list_items():
-    return [
-        "items1",
-        "items2",
-    ]
-
-@app.get("/items2")
-def list_items2():
-    return [
-        "items1",
-        "items2",
-    ]
