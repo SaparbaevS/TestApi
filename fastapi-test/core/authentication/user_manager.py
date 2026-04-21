@@ -39,3 +39,14 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
             token,
         )
 
+    async def on_after_forgot_password(
+        self,
+        user: User,
+        token: str,
+        request: Optional["Request"] = None,
+    ):
+        log.warning(
+            "User %r has forgot their password. Reset token: %r",
+            user.id,
+            token,
+        )
