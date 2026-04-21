@@ -1,15 +1,15 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-
-from core.config import settings
+from actions.create_superuser import create_superuser
 
 from api import router as api_router
 from core.models import db_helper
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # start up
+    # await create_superuser()
+    # startup
     yield
     # shutdown
     await db_helper.dispose()
@@ -19,5 +19,5 @@ async def lifespan(app: FastAPI):
 main_app = FastAPI(
     lifespan=lifespan,
 )
-main_app.include_router(api_router, prefix=settings.api.prefix)
+main_app.include_router(api_router)
 
