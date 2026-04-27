@@ -1,18 +1,18 @@
 from pydantic import BaseModel
 from pydantic import PostgresDsn
-from pydantic_settings import BaseSettings, SettingsConfigDict 
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class RunConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
 
+
 class ApiV1Prefix(BaseModel):
     prefix: str = "/v1"
     auth: str = "/auth"
     users: str = "/users"
     messages: str = "/messages"
-
 
 
 class ApiPrefix(BaseModel):
@@ -23,11 +23,8 @@ class ApiPrefix(BaseModel):
     def bearer_token_url(self) -> str:
         # /api/v1/auth/login
         parts = (self.prefix, self.v1.prefix, self.v1.auth, "/login")
-        path =  "".join(parts)
+        path = "".join(parts)
         return path.removeprefix("/")
-
-
-
 
 
 class DatabaseConfig(BaseModel):
@@ -36,7 +33,6 @@ class DatabaseConfig(BaseModel):
     echo_pool: bool = False
     pool_size: int = 50
     max_overflow: int = 10
-
 
     naming_convention: dict[str, str] = {
         "ix": "ix_%(column_0_label)s",
@@ -53,6 +49,24 @@ class AccessToken(BaseModel):
     verification_token_secret: str
 
 
+class RedisDB(BaseModel):
+    cache: int = 0
+
+
+class RedisConfig(BaseModel):
+    host: str = "localhost"
+    port: int = 6379
+    db: RedisDB = RedisDB()
+
+
+class CacheNamespace(BaseModel):
+    users_list: str = "users-list"
+
+
+class CacheConfig(BaseModel):
+    prefix: str = "fastapi-cache"
+    namespace: CacheNamespace = CacheNamespace()
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -65,8 +79,8 @@ class Settings(BaseSettings):
     api: ApiPrefix = ApiPrefix()
     db: DatabaseConfig
     access_token: AccessToken
-
-
+    redis: RedisConfig = RedisConfig()
+    cache: CacheConfig = CacheConfig()
 
 
 settings = Settings()
