@@ -1,15 +1,34 @@
-from fastapi import APIRouter
+from typing import TYPE_CHECKING, Annotated
+
+from fastapi import APIRouter, Depends
+
 
 from api.api_v1.fastapi_users import fastapi_users
+from api.dependencies.authentication.users import get_users_db
 
 from core.config import settings
 from core.schemas.user import UserRead, UserCreate
+
+if TYPE_CHECKING:
+    from core.models import User
+    from core.models.user import SQLAlchemyUserDatabase
 
 
 router = APIRouter(
     prefix=settings.api.v1.users,
     tags=["Users"],
 )
+
+
+@router.get("", response_model=list[UserRead])
+async def get_users_list(
+    users_db: Annotated[
+        "SQLAlchemyUserDatabase",
+        Depends(get_users_db),
+    ],
+) -> list["User"]:
+    return await users_db.get_users()
+
 
 # /me
 # /id
