@@ -63,8 +63,9 @@ async def get_users_list(
         "SQLAlchemyUserDatabase",
         Depends(get_users_db),
     ],
-) -> list["User"]:
-    return await users_db.get_users()
+) -> list[UserRead]:
+    users = await users_db.get_users()
+    return [UserRead.model_validate(user) for user in users]
 
 
 # /me
