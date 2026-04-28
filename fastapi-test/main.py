@@ -16,6 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from api import router as api_router
 from core.models import db_helper
 from core.config import settings
+from request_count_middleware import requests_count_middleware_dispatch
 
 
 log = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ ALLOW_ORIGINS = [
 ]
 
 CallNext = Callable[[Request], Awaitable[Response]]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,6 +52,7 @@ main_app = FastAPI(
 )
 main_app.include_router(api_router)
 
+
 async def add_process_time_to_requests(
     request: Request,
     call_next: CallNext,
@@ -59,6 +62,7 @@ async def add_process_time_to_requests(
     process_time = time.perf_counter() - start_time
     response.headers["X-Process-Time"] = f"{process_time:.5f}"
     return response
+
 
 class ProcessTimeHeaderMiddleware(BaseHTTPMiddleware):
     def __init__(self, *args, process_time_header_name: str, **kwargs) -> None:
@@ -89,6 +93,7 @@ async def log_new_request(
     )
     return await call_next(request)
 
+
 main_app.middleware("http")(add_process_time_to_requests)
 main_app.add_middleware(
     CORSMiddleware,
@@ -101,6 +106,10 @@ main_app.add_middleware(
     process_time_header_name="X-Process-Time-New-Again",
 )
 
+main_app.add_middleware(
+    BaseHTTPMiddleware,
+    dispatch=requests_count_middleware_dispatch,
+)
 
 if __name__ == "__main__":
     import uvicorn
