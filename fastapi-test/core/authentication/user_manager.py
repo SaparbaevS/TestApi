@@ -2,6 +2,8 @@ import logging
 from typing import Optional, TYPE_CHECKING
 
 from fastapi_users import BaseUserManager, IntegerIDMixin
+from fastapi_cache import FastAPICache
+
 
 from core.config import settings
 from core.types.user_id import UserIdType
@@ -14,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
-    reset_password_token_secret = settings.access_token.reset_password_token_secret
+    password_token_secret = settings.access_token.reset_password_token_secret
     verification_token_secret = settings.access_token.verification_token_secret
 
     async def on_after_register(
@@ -22,6 +24,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
         user: User,
         request: Optional["Request"] = None,
     ):
+        
+        await FastAPICache.clear(
+            namespace=settings.cache.namespace.users_list,
+        )
         log.warning(
             "User %r has registered.",
             user.id,
